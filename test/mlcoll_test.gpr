@@ -1,0 +1,102 @@
+
+with "../mlcoll.gpr";
+
+project MLColl_Test is
+
+    for Languages use ("Ada");
+
+    type Mode_Type is ("Unsafe_Release", "Release", "Soft_Debug", "Debug");
+    Mode : Mode_Type := external ("Release", "Soft_Debug");
+
+    for Source_Dirs use ("src/**");
+    for Main use ("test_mnist.adb");
+    for Object_Dir use "obj/" & Mode;
+    for Exec_Dir use "bin";
+
+    package Compiler is
+        case Mode is
+            when "Unsafe_Release" =>
+                for Default_Switches ("ada") use
+                  ("-gnatp",
+                   --"-gnatW8",
+                   "-O2",
+                   "-gnata",
+                   "-gnatwa",
+                   "-gnatn",
+                   "-gnat2012",
+                   "-ffast-math",
+                   "-funroll-loops",
+                   "-finline-functions",
+                   "-ftree-vectorize",
+                   "-fomit-frame-pointer",
+                   "-mfpmath=sse");
+
+            when "Release" =>
+                for Default_Switches ("ada") use
+                  (--"-gnatW8",
+                   "-O2",
+                   "-gnata",
+                   "-gnatwa",
+                   "-gnatn",
+                   "-gnat2012",
+                   "-ffast-math",
+                   "-funroll-loops",
+                   "-finline-functions",
+                   "-ftree-vectorize",
+                   "-fomit-frame-pointer",
+                   "-mfpmath=sse");
+
+            when "Soft_Debug" =>
+                for Default_Switches ("ada") use
+                  ("-pg",
+                   --"-gnatW8",
+                   "-g",
+                   "-O2",
+                   "-gnata",
+                   "-gnatwa",
+                   "-gnat2012",
+                   "-ffast-math",
+                   "-fno-unroll-loops",
+                   "-fno-inline-functions",
+                   "-ftree-vectorize",
+                   "-fno-omit-frame-pointer");
+
+            when "Debug" =>
+                for Default_Switches ("ada") use
+                  (--"-O2",
+                   "-fstack-check",               -- Generate stack checking code (part of Ada)
+                   "-gnata",                      -- Enable assertions            (part of Ada)
+                   "-gnato13",                    -- Overflow checking            (part of Ada)
+                   "-gnatf",                      -- Full, verbose error messages
+                   "-gnatwa",                     -- All optional warnings
+                   "-gnatVa",                     -- All validity checks
+                   --"-gnaty3abcdefhiklmnoOprstux", -- Style checks
+                   -- "-gnatwe",                     -- Treat warnings as errors
+                   "-gnat2012",                   -- Use Ada 2012
+                   "-Wall",                       -- All GCC warnings
+                   "-g"                          -- GDB
+                   --"-gnatW8" -- UTF-8 Encoding
+                  );                    -- "-pg"
+
+        end case;
+    end Compiler;
+
+    package Builder is
+        case Mode is
+            when "Release" | "Unsafe_Release"  =>
+                for Default_Switches ("ada") use ("-m", "-s");
+            when "Debug" | "Soft_Debug" =>
+                for Default_Switches ("ada") use ("-m", "-s");
+        end case;
+    end Builder;
+
+    package Linker is
+        case Mode is
+            when "Release" | "Unsafe_Release"  =>
+                for Default_Switches ("Ada") use ("-lm");
+            when "Debug" | "Soft_Debug" =>
+                for Default_Switches ("Ada") use ("-g", "-lm"); --, "-pg"
+        end case;
+    end Linker;
+
+end MLColl_Test;
