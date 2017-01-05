@@ -27,6 +27,7 @@ pragma License (Modified_GPL);
 with Ada.Finalization;
 
 with MLColl;
+with MLColl.Neural_Networks.MLP;
 with MLColl.Encoders.BiRNN;
 
 package MLColl.Encoders.Helper is
@@ -34,23 +35,25 @@ package MLColl.Encoders.Helper is
     type Encoding_Mode_Type is
       (Direct_Token_Embeddings,
        BiRNN_Embeddings, 
-       Window_Based_Embeddings);
+       Window_Based_Embeddings,
+       MLP_Windows_Embeddings);
 
-    type BiRNN_Network_Type is
+    type Encoder_Network_Type is
       (BiRNN_RNN, 
        BiRNN_GRU, 
        BiRNN_GRU_NO_OUTPUT_LAYER,
+       BiRNN_CFN,
        BiRNN_NONE);
 
     type Encoder_Type
       (Encoding_Mode      : Encoding_Mode_Type;
-       BiRNN_Network      : BiRNN_Network_Type;
+       Encoder_Network    : Encoder_Network_Type;
        Encoded_Token_Size : Positive) is new Ada.Finalization.Controlled with record
 
         case Encoding_Mode is
             when BiRNN_Embeddings =>
-                case BiRNN_Network is
-                    when BiRNN_RNN | BiRNN_GRU | BiRNN_GRU_NO_OUTPUT_LAYER =>
+                case Encoder_Network is
+                    when BiRNN_RNN | BiRNN_GRU | BiRNN_GRU_NO_OUTPUT_LAYER | BiRNN_CFN =>
                         BiRNN_Model       : MLColl.Encoders.BiRNN.Model_Access_Type := null;
                         Input_Token_Size  : Positive;
                         
@@ -58,6 +61,9 @@ package MLColl.Encoders.Helper is
                         null;
                 end case;
 
+            when MLP_Windows_Embeddings =>
+                MLP_Model       : MLColl.Neural_Networks.MLP.Model_Type;
+                  
             when Direct_Token_Embeddings =>
                 null;
                 
@@ -73,13 +79,13 @@ package MLColl.Encoders.Helper is
 
     Encoders_Helper_Error : exception;
     
-    package BiRNN_Helper is
+    package Encoder_Network_Helper is
         
-        procedure Initialize_BiRNN_Encoder
+        procedure Initialize_Network_Encoder
           (Encoder           : in out Encoder_Type;
            Input_Token_Size  : in     Positive;
            Hidden_Layer_Size : in     Positive);  
         
-    end BiRNN_Helper;
+    end Encoder_Network_Helper;
     
 end MLColl.Encoders.Helper;
